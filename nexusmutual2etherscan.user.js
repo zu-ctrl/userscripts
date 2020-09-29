@@ -46,8 +46,7 @@
       if (response.url.includes(STEP_1_TARGET_REQUEST_URL)) {
         const clonedResponse = response.clone()
         const jsonBody = await clonedResponse.json()
-        validateParams(jsonBody)
-        if (jsonBody.error && jsonBody.message) {
+        if (!validateParams(jsonBody) || (jsonBody.error && jsonBody.message)) {
           console.error(`[${N_2_E}] ${jsonBody.message}`)
         } else {
           window.open(`${STEP_1_REDIRECT_BASE_URL}?${N_2_E}=${JSON.stringify(jsonBody)}#writeContract`, '_blank')
@@ -90,8 +89,11 @@
       !obj.v ||
       !obj.r ||
       !obj.s
-    )
-      throw new Error(NO_DATA_ERR)
+    ) {
+      return false
+    } else {
+      return true
+    }
   }
 
   function getParentQueryVariable(variable) {
