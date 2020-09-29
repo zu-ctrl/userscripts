@@ -1,14 +1,15 @@
 // ==UserScript==
 // @name         nexusmutual2etherscan
 // @namespace    https://app.nexusmutual.io/
-// @version      0.4
+// @version      0.5
 // @description  Request catcher and form filler
 // @author       johnnykramer
 // @match        *://app.nexusmutual.io/cover/*
 // @match        *://etherscan.io/address/0x181aea6936b407514ebfc0754a37704eb8d98f91*
 // @match        *://etherscan.io/writecontract/index.html*
-// @grant        GM_webRequest
+// @grant        none
 // @require      http://code.jquery.com/jquery-3.4.1.min.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/bignumber.js/8.0.2/bignumber.min.js
 // @downloadURL  https://github.com/zu-ctrl/userscripts/raw/master/nexusmutual2etherscan.user.js
 // @updateURL    https://github.com/zu-ctrl/userscripts/raw/master/nexusmutual2etherscan.user.js
 // ==/UserScript==
@@ -65,7 +66,7 @@
   }
 
   function setContractFields(obj) {
-    waitForEl('#input_payable_2_buyCover', ($el) => $el.val(`0.${obj.price}`)) // buyCover
+    waitForEl('#input_payable_2_buyCover', ($el) => $el.val(convert(obj.price))) // buyCover
     waitForEl('#input_2_1', ($el) => $el.val(obj.contract)) // coveredContractAddress (address)
     waitForEl('#input_2_2', ($el) => $el.val(COVER_CURR_BYTES_4)) // coverCurrency (bytes4)
     waitForEl('#input_2_3', ($el) =>
@@ -116,5 +117,10 @@
         waitForEl(selector, cb)
       }, 100)
     }
+  }
+
+  function convert(weiVal) {
+    var i = new BigNumber(weiVal)
+    return (i = i.times(new BigNumber('0.000000000000000001'))).times(new BigNumber('1')).toString()
   }
 })(window, $)
