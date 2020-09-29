@@ -9,7 +9,8 @@
 // @match        *://etherscan.io/writecontract/index.html*
 // @grant        GM_webRequest
 // @require      http://code.jquery.com/jquery-3.4.1.min.js
-// @downloadURL  none
+// @downloadURL  https://github.com/zu-ctrl/userscripts/raw/master/nexusmutual2etherscan.user.js
+// @updateURL    https://github.com/zu-ctrl/userscripts/raw/master/nexusmutual2etherscan.user.js
 // ==/UserScript==
 
 ;(function () {
