@@ -13,41 +13,82 @@
 // @updateURL    https://github.com/zu-ctrl/userscripts/raw/master/nexusmutual2etherscan.user.js
 // ==/UserScript==
 
-;(function () {
-  if (window.location.href.includes('app.nexusmutual.io/cover/')) {
-    console.log('STEP 1')
+;(function (window, $) {
+  /**
+   * CONSTANTS
+   */
+  const N_2_E = 'nexusmutual2etherscan'
+  const STEP_1_URL = 'app.nexusmutual.io/cover/'
+  const STEP_1_TARGET_REQUEST_URL = 'https://api.nexusmutual.io/v1/quote'
+  const STEP_1_REDIRECT_BASE_URL = 'https://etherscan.io/address/0x181aea6936b407514ebfc0754a37704eb8d98f91'
+  const STEP_2_URL = 'etherscan.io/writecontract/index.html'
+  const COVER_CURR_BYTES_4 = '0x455448'
+  const NO_DATA_ERR = 'No data to process'
+
+  /**
+   * RUNTIME
+   */
+  try {
+    if (window.location.href.includes(STEP_1_URL)) step1()
+    if (window.location.href.includes(STEP_2_URL)) step2()
+  } catch (e) {
+    return console.error(`[${N_2_E}] ${e.message}`)
+  }
+
+  /**
+   * HELPERS
+   */
+  function step1() {
+    console.log(`${N_2_E} STEP 1`)
     const oldFetch = this.fetch
     this.fetch = async (...args) => {
       const response = await oldFetch(...args)
-      if (response.url.includes('https://api.nexusmutual.io/v1/quote')) {
+      if (response.url.includes(STEP_1_TARGET_REQUEST_URL)) {
         const clonedResponse = response.clone()
         const jsonBody = await clonedResponse.json()
-        window.open(
-          `https://etherscan.io/address/0x181aea6936b407514ebfc0754a37704eb8d98f91?nexusmutual2etherscan=${JSON.stringify(
-            jsonBody
-          )}#writeContract`,
-          '_blank'
-        )
+        validateParams(jsonBody)
+        if (jsonBody.error && jsonBody.message) {
+          console.error(`[${N_2_E}] ${jsonBody.message}`)
+        } else {
+          window.open(`${STEP_1_REDIRECT_BASE_URL}?${N_2_E}=${JSON.stringify(jsonBody)}#writeContract`, '_blank')
+        }
       }
       return response
     }
-  } else if (window.location.href.includes('etherscan.io/writecontract/index.html')) {
-    console.log('STEP 2')
-    const queryData = getParentQueryVariable('nexusmutual2etherscan')
+  }
+
+  function step2() {
+    console.log(`${N_2_E} STEP 2`)
+    const queryData = getParentQueryVariable(N_2_E)
+    if (!queryData) return console.error(`[${N_2_E}] ${NO_DATA_ERR}`)
     const parsedData = JSON.parse(queryData)
-    if (parsedData.error && parsedData.message) return console.error('[nexusmutual2etherscan]', parsedData.message)
-    setTimeout(() => {
-      $('#input_payable_2_buyCover').val(`0.${parsedData.price}`) // buyCover
-      $('#input_2_1').val(parsedData.contract) // coveredContractAddress (address)
-      $('#input_2_2').val('0x455448') // coverCurrency (bytes4)
-      $('#input_2_3').val(
-        `${parsedData.amount},${parsedData.price},${parsedData.priceInNXM},${parsedData.expiresAt},${parsedData.generatedAt}`
-      ) // coverDetails (uint256[])
-      $('#input_2_4').val(parsedData.contract) // coverPeriod (uint16)
-      $('#input_2_5').val(parsedData.v) // _v (uint8)
-      $('#input_2_6').val(parsedData.r) // _r (bytes32)
-      $('#input_2_7').val(parsedData.s) // _s (bytes32)
-    }, 5000)
+    setContractFields(parsedData)
+  }
+
+  function setContractFields(obj) {
+    waitForEl('#input_payable_2_buyCover', ($el) => $el.val(`0.${obj.price}`)) // buyCover
+    waitForEl('#input_2_1', ($el) => $el.val(obj.contract)) // coveredContractAddress (address)
+    waitForEl('#input_2_2', ($el) => $el.val(COVER_CURR_BYTES_4)) // coverCurrency (bytes4)
+    waitForEl('#input_2_3', ($el) =>
+      $el.val(`${obj.amount},${obj.price},${obj.priceInNXM},${obj.expiresAt},${obj.generatedAt}`)
+    ) // coverDetails (uint256[])
+    waitForEl('#input_2_4', ($el) => $el.val(obj.period)) // coverPeriod (uint16)
+    waitForEl('#input_2_5', ($el) => $el.val(obj.v)) // _v (uint8)
+    waitForEl('#input_2_6', ($el) => $el.val(obj.r)) // _r (bytes32)
+    waitForEl('#input_2_7', ($el) => $el.val(obj.s)) // _s (bytes32)
+  }
+
+  function validateParams(obj) {
+    if (!obj.amount) throw new Error(NO_DATA_ERR)
+    if (!obj.contract) throw new Error(NO_DATA_ERR)
+    if (!obj.price) throw new Error(NO_DATA_ERR)
+    if (!obj.priceInNXM) throw new Error(NO_DATA_ERR)
+    if (!obj.expiresAt) throw new Error(NO_DATA_ERR)
+    if (!obj.generatedAt) throw new Error(NO_DATA_ERR)
+    if (!obj.period) throw new Error(NO_DATA_ERR)
+    if (!obj.v) throw new Error(NO_DATA_ERR)
+    if (!obj.r) throw new Error(NO_DATA_ERR)
+    if (!obj.s) throw new Error(NO_DATA_ERR)
   }
 
   function getParentQueryVariable(variable) {
@@ -61,4 +102,14 @@
     }
     return undefined
   }
-})()
+
+  function waitForEl(selector, cb) {
+    if ($(selector).length) {
+      cb($(selector))
+    } else {
+      setTimeout(() => {
+        waitForEl(selector, cb)
+      }, 100)
+    }
+  }
+})(window, $)
