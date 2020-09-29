@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         nexusmutual2etherscan
 // @namespace    https://app.nexusmutual.io/
-// @version      0.1
+// @version      0.2
 // @description  Request catcher and form filler
 // @author       johnnykramer
 // @match        *://app.nexusmutual.io/cover/*
