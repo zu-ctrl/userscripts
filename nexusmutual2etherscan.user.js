@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         nexusmutual2etherscan
 // @namespace    https://app.nexusmutual.io/
-// @version      0.2
+// @version      0.3
 // @description  Request catcher and form filler
 // @author       johnnykramer
 // @match        *://app.nexusmutual.io/cover/*
@@ -79,16 +79,19 @@
   }
 
   function validateParams(obj) {
-    if (!obj.amount) throw new Error(NO_DATA_ERR)
-    if (!obj.contract) throw new Error(NO_DATA_ERR)
-    if (!obj.price) throw new Error(NO_DATA_ERR)
-    if (!obj.priceInNXM) throw new Error(NO_DATA_ERR)
-    if (!obj.expiresAt) throw new Error(NO_DATA_ERR)
-    if (!obj.generatedAt) throw new Error(NO_DATA_ERR)
-    if (!obj.period) throw new Error(NO_DATA_ERR)
-    if (!obj.v) throw new Error(NO_DATA_ERR)
-    if (!obj.r) throw new Error(NO_DATA_ERR)
-    if (!obj.s) throw new Error(NO_DATA_ERR)
+    if (
+      !obj.amount ||
+      !obj.contract ||
+      !obj.price ||
+      !obj.priceInNXM ||
+      !obj.expiresAt ||
+      !obj.generatedAt ||
+      !obj.period ||
+      !obj.v ||
+      !obj.r ||
+      !obj.s
+    )
+      throw new Error(NO_DATA_ERR)
   }
 
   function getParentQueryVariable(variable) {
